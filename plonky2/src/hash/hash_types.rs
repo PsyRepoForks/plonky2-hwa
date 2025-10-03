@@ -265,7 +265,6 @@ mod tests {
 
     use super::*;
 
-    use crate::field::goldilocks_field::GoldilocksField as GF;
 
     #[cfg_attr(feature = "serialize_rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
     #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
@@ -277,6 +276,7 @@ mod tests {
         pub c: [HashOut<F>; 32],
         pub d: F,
     }
+    #[cfg(any(feature = "serialize_rkyv", feature = "serialize_speedy"))]
     impl<F: PrimeField64> TestStructA<F> {
         pub fn new_rand() -> Self {
             Self {
@@ -298,6 +298,7 @@ mod tests {
         pub y: HashOut<F>,
         pub z: [TestStructA<F>; 4],
     }
+    #[cfg(any(feature = "serialize_rkyv", feature = "serialize_speedy"))]
     impl<F: PrimeField64> TestStructB<F> {
         pub fn new_rand() -> Self {
             Self {
@@ -319,6 +320,8 @@ mod tests {
         pub root: HashOut<F>,
         pub index: F,
     }
+    
+    #[cfg(any(feature = "serialize_rkyv", feature = "serialize_speedy"))]
     impl<F: PrimeField64> MerkleProofStructC<F> {
         pub fn new_rand(depth: usize) -> Self {
             Self {
@@ -334,6 +337,7 @@ mod tests {
     #[test]
     #[cfg(feature = "serialize_rkyv")]
     fn test_rkyv_round_trip() {
+        use crate::field::goldilocks_field::GoldilocksField as GF;
         // Test for TestStructA
 
         use rkyv::rancor;
@@ -358,6 +362,8 @@ mod tests {
     #[test]
     #[cfg(feature = "serialize_speedy")]
     fn test_speedy_round_trip() {
+        use crate::field::goldilocks_field::GoldilocksField as GF;
+
         use speedy::{Readable, Writable};
 
         // Test for TestStructA
