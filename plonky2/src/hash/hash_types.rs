@@ -23,6 +23,8 @@ pub const NUM_HASH_OUT_ELTS: usize = 4;
 
 /// Represents a ~256 bit hash output.
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
+#[cfg_attr(feature = "serialize_rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+#[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
 #[serde(bound = "")]
 pub struct HashOut<F: Field> {
     pub elements: [F; NUM_HASH_OUT_ELTS],
@@ -255,4 +257,126 @@ impl<'de, const N: usize> Deserialize<'de> for BytesHash<N> {
     {
         deserializer.deserialize_seq(ByteHashVisitor::<N>)
     }
+}
+
+
+#[cfg(test)]
+mod tests {
+
+    use super::*;
+
+    use crate::field::goldilocks_field::GoldilocksField as GF;
+
+    #[cfg_attr(feature = "serialize_rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+    #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+    #[serde(bound = "")]
+    pub struct TestStructA<F: PrimeField64> {
+        pub a: HashOut<F>,
+        pub b: u64,
+        pub c: [HashOut<F>; 32],
+        pub d: F,
+    }
+    impl<F: PrimeField64> TestStructA<F> {
+        pub fn new_rand() -> Self {
+            Self {
+                a: HashOut::rand(),
+                b: 1337,
+                c: core::array::from_fn(|_| HashOut::rand()),
+                d: F::rand(),
+            }
+        }
+    }
+
+    #[cfg_attr(feature = "serialize_rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+    #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone, Copy)]
+    #[serde(bound = "")]
+    pub struct TestStructB<F: PrimeField64> {
+        pub w: TestStructA<F>,
+        pub x: [u8; 32],
+        pub y: HashOut<F>,
+        pub z: [TestStructA<F>; 4],
+    }
+    impl<F: PrimeField64> TestStructB<F> {
+        pub fn new_rand() -> Self {
+            Self {
+                w: TestStructA::new_rand(),
+                x: core::array::from_fn(|_| (F::rand().to_canonical_u64()&0xffu64) as u8),
+                y: HashOut::rand(),
+                z: core::array::from_fn(|_| TestStructA::new_rand()),
+            }
+        }
+    }
+
+    #[cfg_attr(feature = "serialize_rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
+    #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+    #[derive(Serialize, Deserialize, Debug, PartialEq, Eq, Clone)]
+    #[serde(bound = "")]
+    pub struct MerkleProofStructC<F: PrimeField64> {
+        pub siblings: Vec<HashOut<F>>,
+        pub value: HashOut<F>,
+        pub root: HashOut<F>,
+        pub index: F,
+    }
+    impl<F: PrimeField64> MerkleProofStructC<F> {
+        pub fn new_rand(depth: usize) -> Self {
+            Self {
+                siblings: (0..depth).map(|_| HashOut::rand()).collect(),
+                value: HashOut::rand(),
+                root: HashOut::rand(),
+                index: F::rand(),
+            }
+        }
+    }
+    
+
+    #[test]
+    #[cfg(feature = "serialize_rkyv")]
+    fn test_rkyv_round_trip() {
+        // Test for TestStructA
+
+        use rkyv::rancor;
+        let original_a = TestStructA::<GF>::new_rand();
+        let bytes_a = rkyv::to_bytes::<rancor::Error>(&original_a).expect("failed to serialize A");
+        let deserialized_a: TestStructA<GF> = rkyv::from_bytes::<_, rancor::Error>(&bytes_a).expect("failed to deserialize A");
+        assert_eq!(original_a, deserialized_a);
+
+        // Test for TestStructB
+        let original_b = TestStructB::<GF>::new_rand();
+        let bytes_b = rkyv::to_bytes::<rancor::Error>(&original_b).expect("failed to serialize B");
+        let deserialized_b: TestStructB<GF> = rkyv::from_bytes::<_, rancor::Error>(&bytes_b).expect("failed to deserialize B");
+        assert_eq!(original_b, deserialized_b);
+
+        // Test for MerkleProofStructC
+        let original_c = MerkleProofStructC::<GF>::new_rand(16);
+        let bytes_c = rkyv::to_bytes::<rancor::Error>(&original_c).expect("failed to serialize C");
+        let deserialized_c: MerkleProofStructC<GF> = rkyv::from_bytes::<_, rancor::Error>(&bytes_c).expect("failed to deserialize C");
+        assert_eq!(original_c, deserialized_c);
+    }
+
+    #[test]
+    #[cfg(feature = "serialize_speedy")]
+    fn test_speedy_round_trip() {
+        use speedy::{Readable, Writable};
+
+        // Test for TestStructA
+        let original_a = TestStructA::<GF>::new_rand();
+        let bytes_a = original_a.write_to_vec().expect("failed to serialize A");
+        let deserialized_a = TestStructA::<GF>::read_from_buffer(&bytes_a).expect("failed to deserialize A");
+        assert_eq!(original_a, deserialized_a);
+
+        // Test for TestStructB
+        let original_b = TestStructB::<GF>::new_rand();
+        let bytes_b = original_b.write_to_vec().expect("failed to serialize B");
+        let deserialized_b = TestStructB::<GF>::read_from_buffer(&bytes_b).expect("failed to deserialize B");
+        assert_eq!(original_b, deserialized_b);
+        
+        // Test for MerkleProofStructC
+        let original_c = MerkleProofStructC::<GF>::new_rand(16);
+        let bytes_c = original_c.write_to_vec().expect("failed to serialize C");
+        let deserialized_c = MerkleProofStructC::<GF>::read_from_buffer(&bytes_c).expect("failed to deserialize C");
+        assert_eq!(original_c, deserialized_c);
+    }
+    
 }

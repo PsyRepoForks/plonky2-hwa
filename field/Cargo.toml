@@ -10,6 +10,12 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[features]
+default = []
+std = []
+serialize_rkyv = ["dep:rkyv"]
+serialize_speedy = ["dep:speedy", "std"]
+
 [dependencies]
 anyhow = { workspace = true }
 itertools = { workspace = true, features = ["use_alloc"] }
@@ -19,6 +25,10 @@ serde = { workspace = true, features = ["alloc"] }
 static_assertions = { workspace = true }
 unroll = { workspace = true }
 ts-rs = {workspace = true}
+
+# Serialization Helpers
+rkyv = { workspace = true, optional = true }
+speedy = { workspace = true, optional = true }
 
 # Local dependencies
 plonky2_util = { version = "1.0.0", path = "../util", default-features = false }
