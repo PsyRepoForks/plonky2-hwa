@@ -27,7 +27,7 @@ pub const NUM_HASH_OUT_ELTS: usize = 4;
 #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
 #[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
 #[serde(bound = "")]
-#[repr(C)]
+#[repr(transparent)]
 pub struct HashOut<F: Field> {
     pub elements: [F; NUM_HASH_OUT_ELTS],
 }
