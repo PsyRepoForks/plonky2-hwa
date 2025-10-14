@@ -21,6 +21,7 @@ std = ["anyhow/std", "rand/std", "itertools/use_std"]
 timing = ["std", "dep:web-time"]
 serialize_rkyv = ["dep:rkyv", "plonky2_field/serialize_rkyv"]
 serialize_speedy = ["dep:speedy", "std", "plonky2_field/serialize_speedy"]
+serialize_bytemuck = ["dep:bytemuck", "plonky2_field/serialize_bytemuck"]
 
 [dependencies]
 ahash = { workspace = true }
@@ -41,6 +42,7 @@ web-time = { version = "1.0.0", optional = true }
 # Serialization Helpers
 rkyv = { workspace = true, optional = true }
 speedy = { workspace = true, optional = true }
+bytemuck = { workspace = true, optional = true }
 
 # Local dependencies
 plonky2_field = { version = "1.0.0", path = "../field", default-features = false }

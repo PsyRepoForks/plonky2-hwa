@@ -24,6 +24,7 @@ const EPSILON: u64 = (1 << 32) - 1;
 #[derive(Copy, Clone, Serialize, Deserialize)]
 #[cfg_attr(feature = "serialize_rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
 #[repr(transparent)]
 pub struct GoldilocksField(pub u64);
 

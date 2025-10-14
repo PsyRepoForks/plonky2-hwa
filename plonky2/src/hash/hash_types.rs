@@ -25,7 +25,9 @@ pub const NUM_HASH_OUT_ELTS: usize = 4;
 #[derive(Copy, Clone, Debug, Eq, PartialEq, Hash, Serialize, Deserialize)]
 #[cfg_attr(feature = "serialize_rkyv", derive(rkyv::Archive, rkyv::Serialize, rkyv::Deserialize))]
 #[cfg_attr(feature = "serialize_speedy", derive(speedy::Readable, speedy::Writable))]
+#[cfg_attr(feature = "serialize_bytemuck", derive(bytemuck::Pod, bytemuck::Zeroable))]
 #[serde(bound = "")]
+#[repr(C)]
 pub struct HashOut<F: Field> {
     pub elements: [F; NUM_HASH_OUT_ELTS],
 }

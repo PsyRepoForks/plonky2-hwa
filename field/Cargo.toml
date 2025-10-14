@@ -15,7 +15,7 @@ default = []
 std = []
 serialize_rkyv = ["dep:rkyv"]
 serialize_speedy = ["dep:speedy", "std"]
-
+serialize_bytemuck = ["dep:bytemuck"]
 [dependencies]
 anyhow = { workspace = true }
 itertools = { workspace = true, features = ["use_alloc"] }
@@ -29,6 +29,7 @@ ts-rs = {workspace = true}
 # Serialization Helpers
 rkyv = { workspace = true, optional = true }
 speedy = { workspace = true, optional = true }
+bytemuck = { workspace = true, optional = true }
 
 # Local dependencies
 plonky2_util = { version = "1.0.0", path = "../util", default-features = false }
